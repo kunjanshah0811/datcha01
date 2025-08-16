@@ -1,0 +1,12 @@
+name: Datcha_working
+title: Datcha_working
+username: kunjan
+account: kunjan
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 15214128
+bundleId: 10779881
+url: https://kunjan.shinyapps.io/Datcha_working/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
