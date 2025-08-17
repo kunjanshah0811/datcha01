@@ -209,6 +209,3 @@ dataEditingUI <- function(id) {
     # ...other UI elements
   )
 }
-
-
-

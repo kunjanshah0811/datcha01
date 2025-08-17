@@ -4,6 +4,7 @@
 
 dataDeletionModule <- function(input, output, session, shared_data, detect_id_column) {
   # Create a reactive value to track if comparison was done
+  
   comparison_done <- reactiveVal(FALSE)
 
   # Observe when compare button is pressed
@@ -77,19 +78,6 @@ dataDeletionModule <- function(input, output, session, shared_data, detect_id_co
     )
   })
 
-  # Function to detect the correct ID column
-  detect_id_column <- function(df, manual_name = NULL) {
-    possible_ids <- c("id", "tweet_id", "comment_id")
-    if (!is.null(manual_name) && manual_name %in% names(df)) {
-      return(manual_name)
-    }
-    found <- intersect(possible_ids, names(df))
-    if (length(found) > 0) return(found[1])
-    NULL
-  }
-
-  # ===== 4.2 Core Analysis Functions
-
   # Date validation message
   output$date_validation_msg <- renderUI({
     if (is.null(input$date1) || is.null(input$date2)) {
@@ -125,14 +113,14 @@ dataDeletionModule <- function(input, output, session, shared_data, detect_id_co
     paste("Daily Removal Rate:", daily_removal_percent, "% of total posts/day (over", days_diff, "days)")
   })
 
-  # Enable/disable compare button based on date validity
-  observe({
-    if (!is.null(input$date1) && !is.null(input$date2) && input$date2 > input$date1) {
-      shinyjs::enable("compare")
-    } else {
-      shinyjs::disable("compare")
-    }
-  })
+  # # Enable/disable compare button based on date validity
+  # observe({
+  #   if (!is.null(input$date1) && !is.null(input$date2) && input$date2 > input$date1) {
+  #     shinyjs::enable("compare")
+  #   } else {
+  #     shinyjs::disable("compare")
+  #   }
+  # })
 
   # Calculate the number of posts in Dataset 1
   output$dataset1_count <- renderText({
@@ -218,7 +206,7 @@ dataDeletionModule <- function(input, output, session, shared_data, detect_id_co
       hc_xAxis(categories = word_freq[1:100,]$word,
                 labels = list(style = list(fontSize = '11px')), max = 20, scrollbar = list(enabled = TRUE)) %>%
       hc_add_series(name = "Word", data = word_freq[1:100,]$freq, type = "column",
-                    color = "#AA0114", showInLegend = FALSE)
+                    color = "#4CAF50", showInLegend = FALSE)
   })
 
   output$word_freq_plot_remaining <- renderHighchart({
@@ -252,455 +240,43 @@ dataDeletionModule <- function(input, output, session, shared_data, detect_id_co
       hc_xAxis(categories = word_freq[1:100,]$word,
                 labels = list(style = list(fontSize = '11px')), max = 20, scrollbar = list(enabled = TRUE)) %>%
       hc_add_series(name = "Word", data = word_freq[1:100,]$freq, type = "column",
-                    color = "#4472c4", showInLegend = FALSE)
+                    color = "#2196F3", showInLegend = FALSE)
   })
 
-
-  # # ===== Generate Word Cloud ===== #
-  # output$word_cloud_removed <- renderWordcloud2({
-  #   req(comparison_done(), removed_posts())
-  #   
-  #   if (is.null(removed_posts()$text) || all(removed_posts()$text == "")) {
-  #     return(div(class = "loading-placeholder", "No text data in removed posts"))
-  #   }
-  #   
-  #   cleaned_text <- text_processor$clean(removed_posts()$text, use_stem = FALSE, use_lemma = TRUE )
-  #   word_freq <- text_processor$get_freq(cleaned_text) %>%
-  #     filter(freq > 1) %>%
-  #     slice(1:100)
-  #   
-  #   if (nrow(word_freq) == 0) {
-  #     return(div(class = "loading-placeholder", "No frequent words in removed posts"))
-  #   }
-  #   
-  #   wc <- wordcloud2(
-  #     word_freq,
-  #     size = 0.8,
-  #     minSize = 0.01,
-  #     gridSize = 10,
-  #     color = "#FF6B6B",
-  #     shape = 'circle'
-  #   )
-  #   
-  #   wc %>% htmlwidgets::onRender("
-  #     function(el) {
-  #       var canvas = el.querySelector('canvas');
-  #       if (!canvas) return;
-  #       
-  #       canvas.addEventListener('mousemove', function(evt) {
-  #         if (evt.target.tagName === 'CANVAS') {
-  #           var word = evt.target.textContent;
-  #           if (word) {
-  #             Shiny.setInputValue('hover_word_removed', word);
-  #           }
-  #         }
-  #       });
-  #       
-  #       canvas.addEventListener('mouseout', function(e) {
-  #         Shiny.setInputValue('hover_word_removed', null);
-  #       });
-  #     }
-  #   ")
-  # })
-  # 
-  # output$word_cloud_remaining <- renderWordcloud2({
-  #   req(comparison_done(), remaining_posts())
-  #   
-  #   if (is.null(remaining_posts()$text) || all(remaining_posts()$text == "")) {
-  #     return(div(class = "loading-placeholder", "No text data in remaining posts"))
-  #   }
-  #  
-  #   cleaned_text <- text_processor$clean(remaining_posts()$text,  use_stem = FALSE, use_lemma = TRUE)
-  #   word_freq <- text_processor$get_freq(cleaned_text) %>%
-  #     filter(freq > 1) %>%
-  #     slice(1:100)
-  #   
-  #   if (nrow(word_freq) == 0) {
-  #     return(div(class = "loading-placeholder", "No frequent words in remaining posts"))
-  #   }
-  #   
-  #   wc <- wordcloud2(
-  #     word_freq,
-  #     size = 0.8,
-  #     minSize = 0.01,
-  #     gridSize = 10,
-  #     color = "#4ECDC4",
-  #     shape = 'circle'
-  #   )
-  #   
-  #   wc %>% htmlwidgets::onRender("
-  #     function(el) {
-  #       var canvas = el.querySelector('canvas');
-  #       if (!canvas) return;
-  #       
-  #       canvas.addEventListener('mousemove', function(evt) {
-  #         if (evt.target.tagName === 'CANVAS') {
-  #           var word = evt.target.textContent;
-  #           if (word) {
-  #             Shiny.setInputValue('hover_word_remaining', word);
-  #           }
-  #         }
-  #       });
-  #       
-  #       canvas.addEventListener('mouseout', function(e) {
-  #         Shiny.setInputValue('hover_word_remaining', null);
-  #       });
-  #     }
-  #   ")
-  # })
-  # 
-  # 
-  # 
-  # observeEvent(input$hover_word, {
-  #   if (!is.null(input$hover_word)) {
-  #     word <- input$hover_word$word
-  #     source <- input$hover_word$source
-  #     
-  #     # Handle the hover based on the word and source
-  #     if (source == "removed") {
-  #       # Handle hover on removed word cloud
-  #     } else if (source == "remaining") {
-  #       # Handle hover on remaining word cloud
-  #     }
-  #   }
-  # })
-
-#   output$word_cloud_removed <- renderWordcloud2({
-#     req(comparison_done(), removed_posts())
-#     
-#     if (is.null(removed_posts()$text) || all(removed_posts()$text == "")) {
-#       return(div(class = "loading-placeholder", "No text data in removed posts"))
-#     }
-#     
-#     cleaned_text <- text_processor$clean(removed_posts()$text)
-#     word_freq <- text_processor$get_freq(cleaned_text) %>%
-#       filter(freq > 1) %>%
-#       slice(1:100)
-#     
-#     if (nrow(word_freq) == 0) {
-#       return(div(class = "loading-placeholder", "No frequent words in removed posts"))
-#     }
-#     
-#     wc <- wordcloud2(
-#       word_freq,
-#       size = 0.8,
-#       minSize = 0.01,
-#       gridSize = 10,
-#       color = "#FF6B6B",
-#       shape = 'circle'
-#     )
-#     
-#     wc %>% htmlwidgets::onRender(JS("
-#     function(el) {
-#       var canvas = el.querySelector('canvas');
-#       if (!canvas) return;
-#       
-#       canvas.addEventListener('mousemove', function(evt) {
-#         var rect = canvas.getBoundingClientRect();
-#         var x = evt.clientX - rect.left;
-#         var y = evt.clientY - rect.top;
-#         
-#         if (evt.target.tagName === 'CANVAS') {
-#           var word = evt.target.textContent;
-#           Shiny.setInputValue('hover_word_removed', word);
-#         }
-#       });
-#       
-#       canvas.addEventListener('mouseout', function(e) {
-#         Shiny.setInputValue('hover_word_removed', null);
-#       });
-#     }
-#   "))
-#   })
-#   
-#   output$word_cloud_remaining <- renderWordcloud2({
-#     req(comparison_done(), remaining_posts())
-#     
-#     if (is.null(remaining_posts()$text) || all(remaining_posts()$text == "")) {
-#       return(div(class = "loading-placeholder", "No text data in remaining posts"))
-#     }
-#     
-#     cleaned_text <- text_processor$clean(remaining_posts()$text)
-#     word_freq <- text_processor$get_freq(cleaned_text) %>%
-#       filter(freq > 1) %>%
-#       slice(1:100)
-#     
-#     if (nrow(word_freq) == 0) {
-#       return(div(class = "loading-placeholder", "No frequent words in remaining posts"))
-#     }
-#     
-#     wc <- wordcloud2(
-#       word_freq,
-#       size = 0.8,
-#       minSize = 0.01,
-#       gridSize = 10,
-#       color = "#4ECDC4",
-#       shape = 'circle'
-#     )
-#     
-#     wc %>% htmlwidgets::onRender(JS("
-#     function(el) {
-#       var canvas = el.querySelector('canvas');
-#       if (!canvas) return;
-#       
-#       canvas.addEventListener('mousemove', function(evt) {
-#         var rect = canvas.getBoundingClientRect();
-#         var x = evt.clientX - rect.left;
-#         var y = evt.clientY - rect.top;
-#         
-#         if (evt.target.tagName === 'CANVAS') {
-#           var word = evt.target.textContent;
-#           Shiny.setInputValue('hover_word_remaining', word);
-#         }
-#       });
-#       
-#       canvas.addEventListener('mouseout', function(e) {
-#         Shiny.setInputValue('hover_word_remaining', null);
-#       });
-#     }
-#   "))
-#   })
-#   
-#   # Add CSS
-#   tags$style(HTML("
-#   .loading-placeholder {
-#     height: 400px;
-#     display: flex;
-#     align-items: center;
-#     justify-content: center;
-#     color: #666;
-#     font-style: italic;
-#   }
-#   .word-highlight {
-#     font-weight: 900 !important;
-#     font-size: 1.5em !important;
-#     fill: #FFA500 !important;
-#     cursor: pointer;
-#   }
-# "))
-#   
-#   # Observers for hover effects
-#   observeEvent(input$hover_word_removed, {
-#     if (is.null(input$hover_word_removed)) {
-#       runjs('
-#       document.querySelector("#word_cloud_removed").querySelectorAll(".word-highlight").forEach(el => {
-#         el.classList.remove("word-highlight");
-#       });
-#     ')
-#     } else {
-#       runjs(sprintf('
-#       document.querySelector("#word_cloud_removed").querySelectorAll(".word-highlight").forEach(el => {
-#         el.classList.remove("word-highlight");
-#       });
-#       document.querySelector("#word_cloud_removed").querySelectorAll("span").forEach(el => {
-#         if(el.textContent === "%s") {
-#           el.classList.add("word-highlight");
-#         }
-#       });
-#     ', input$hover_word_removed))
-#     }
-#   }, ignoreNULL = FALSE)
-#   
-#   observeEvent(input$hover_word_remaining, {
-#     if (is.null(input$hover_word_remaining)) {
-#       runjs('
-#       document.querySelector("#word_cloud_remaining").querySelectorAll(".word-highlight").forEach(el => {
-#         el.classList.remove("word-highlight");
-#       });
-#     ')
-#     } else {
-#       runjs(sprintf('
-#       document.querySelector("#word_cloud_remaining").querySelectorAll(".word-highlight").forEach(el => {
-#         el.classList.remove("word-highlight");
-#       });
-#       document.querySelector("#word_cloud_remaining").querySelectorAll("span").forEach(el => {
-#         if(el.textContent === "%s") {
-#           el.classList.add("word-highlight");
-#         }
-#       });
-#     ', input$hover_word_remaining))
-#     }
-#   }, ignoreNULL = FALSE)
-
-
-
-
-
-#   process_text_data <- function(text_data, gram_type = "Uni-gram") {
-#     if (is.null(text_data) || all(text_data == "")) return(NULL)
-#     
-#     # Clean once, use everywhere
-#     cleaned_text <- text_processor$clean(text_data)
-#     
-#     # Dynamic max words based on dataset size
-#     total_words <- length(unlist(strsplit(cleaned_text, "\\s+")))
-#     max_words <- ifelse(total_words < 50, floor(total_words/2), 100)
-#     
-#     if (gram_type == "Uni-gram") {
-#       # Uni-gram processing
-#       corpus <- Corpus(VectorSource(cleaned_text))
-#       dtm <- DocumentTermMatrix(corpus)
-#       freq <- colSums(as.matrix(dtm))
-#       word_freq <- data.frame(word = names(freq), freq = freq) |> 
-#         arrange(desc(freq)) |> 
-#         filter(freq > 1) |> 
-#         slice(1:max_words)
-#     } else {
-# 
-#       # Bi-gram processing with dynamic adjustment
-#       text_df <- tibble(text = cleaned_text)
-#       word_freq <- text_df |>
-#         unnest_tokens(bigram, text, token = "ngrams", n = 2) |>
-#         count(bigram, sort = TRUE) |>
-#         filter(n > 1) |>
-#         rename(word = bigram, freq = n)
-# 
-#       # Adjust for small datasets
-#       available_bigrams <- nrow(word_freq)
-#       if (available_bigrams > 0) {
-#         word_freq <- word_freq |>
-#           slice(1:min(max_words, available_bigrams))
-#       }
-#     }
-#     return(word_freq)
-#   }
-#   
-#   # Replace the existing reactive calculations with:
-#   removed_word_freq <- reactive({
-#     req(comparison_done(), removed_posts())
-#     cleaned <- text_processor$clean(removed_posts()$text)
-#     text_processor$get_freq(cleaned, gram_type = "Uni-gram") %>%
-#       filter(freq > 1) %>%  # Add your existing filters
-#       slice(1:100)          # Add your existing slicing
-#   }) 
-#   
-#   remaining_word_freq <- reactive({
-#     req(comparison_done(), remaining_posts())
-#     cleaned <- text_processor$clean(remaining_posts()$text)
-#     text_processor$get_freq(cleaned, gram_type = "Uni-gram") %>%
-#       filter(freq > 1) %>%  # Add your existing filters
-#       slice(1:100)          # Add your existing slicing
-#   }) 
-#   
-#   # Word cloud renders with dynamic sizing
-#   output$word_cloud_removed <- renderWordcloud2({
-#     req(comparison_done(), removed_posts())
-#     # Show loading placeholder
-#     if(is.null(removed_word_freq())) {
-#       return(div(class = "loading-placeholder", "Generating word cloud..."))
-#     }
-#     
-#     if (nrow(removed_word_freq()) == 0) {
-#       showNotification("No valid bigrams in removed posts", type = "warning")
-#       return(NULL)
-#     }
-#     
-#     wordcloud2(
-#       removed_word_freq(),
-#       size = ifelse(input$word_cloud_gram == "Uni-gram", 0.8, 0.6),
-#       minSize = ifelse(input$word_cloud_gram == "Uni-gram", 0.01, 0.005),
-#       gridSize = ifelse(input$word_cloud_gram == "Uni-gram", 10, 5),
-#       color = "#FF6B6B",
-#       shape = 'circle'
-#     )
-#   })
-#   
-#   # Remaining posts word cloud - fixed hover issue
-#   output$word_cloud_remaining <- renderWordcloud2({
-#     req(comparison_done(), remaining_posts())
-#     # Show loading placeholder
-#     if(is.null(remaining_word_freq())) {
-#       return(div(class = "loading-placeholder", "Generating word cloud..."))
-#     }
-#     
-#     if (nrow(remaining_word_freq()) == 0) {
-#       showNotification("No valid bigrams in remaining posts", type = "warning")
-#       return(NULL)
-#     }
-#     
-#     wordcloud2(
-#       remaining_word_freq(),
-#       size = ifelse(input$word_cloud_gram == "Uni-gram", 0.8, 0.6),
-#       minSize = ifelse(input$word_cloud_gram == "Uni-gram", 0.01, 0.005),
-#       gridSize = ifelse(input$word_cloud_gram == "Uni-gram", 10, 5),
-#       color = "#4ECDC4",
-#       shape = 'circle'
-#     )
-#   })
-#   # Add CSS for loading placeholder
-#   tags$style(HTML("
-#   .loading-placeholder {
-#     height: 400px;
-#     display: flex;
-#     align-items: center;
-#     justify-content: center;
-#     color: #666;
-#     font-style: italic;
-#   }
-# "))
-
-
-
-# ===== Topic Modeling ===== #
-
-
-# Helper: run LDA on cleaned text (backup helper function)
-# run_lda <- function(text_data, k) {
-#   cleaned <- text_processor$clean(text_data, use_stem = FALSE, use_lemma = TRUE)
-#   if (length(cleaned) < 5) return(NULL)
-#   
-#   
-#   corpus <- Corpus(VectorSource(cleaned))
-#   dtm <- DocumentTermMatrix(corpus)
-#   
-#   # Find non-empty docs
-#   non_empty_docs <- rowSums(as.matrix(dtm)) > 0
-#   
-#   # Filter both corpus and cleaned text
-#   dtm <- dtm[non_empty_docs, ]
-#   cleaned <- cleaned[non_empty_docs]
-#   
-#   
-#   
-#   if (nrow(dtm) < 5 || ncol(dtm) < 5) return(NULL)
-#   tryCatch(LDA(dtm, k = k, control = list(seed = 123, verbose = 0)),
-#            error = function(e) NULL)
-# }
-
-# Helper: Create JSON for LDAvis easily
-topicmodels_json_ldavis <- function(fitted, text_vector, doc_term) {
-  library(dplyr)
-  library(stringi)
-  
-  phi <- posterior(fitted)$terms %>% as.matrix()
-  theta <- posterior(fitted)$topics %>% as.matrix()
-  vocab <- colnames(phi)
-  
-  doc_length <- sapply(text_vector, function(x) {
-    stri_count(x, regex = "\\S+")
-  })
-  
-  temp_frequency <- as.matrix(doc_term)
-  freq_matrix <- data.frame(ST = colnames(temp_frequency),
-                            Freq = colSums(temp_frequency))
-  
-  # TRY createJSON with cmdscale, fallback to PCA if error
-  json <- tryCatch({
-    LDAvis::createJSON(phi = phi, theta = theta,
-                        vocab = vocab,
-                        doc.length = doc_length,
-                        term.frequency = freq_matrix$Freq,
-                        mds.method = stats::cmdscale)
-  }, error = function(e) {
-    LDAvis::createJSON(phi = phi, theta = theta,
-                        vocab = vocab,
-                        doc.length = doc_length,
-                        term.frequency = freq_matrix$Freq,
-                        mds.method = function(x) { prcomp(x)$x[,1:2] })
-  })
-  
-  return(json)
-}
+  # Helper: Create JSON for LDAvis easily
+  topicmodels_json_ldavis <- function(fitted, text_vector, doc_term) {
+    library(dplyr)
+    library(stringi)
+    
+    phi <- posterior(fitted)$terms %>% as.matrix()
+    theta <- posterior(fitted)$topics %>% as.matrix()
+    vocab <- colnames(phi)
+    
+    doc_length <- sapply(text_vector, function(x) {
+      stri_count(x, regex = "\\S+")
+    })
+    
+    temp_frequency <- as.matrix(doc_term)
+    freq_matrix <- data.frame(ST = colnames(temp_frequency),
+                              Freq = colSums(temp_frequency))
+    
+    # TRY createJSON with cmdscale, fallback to PCA if error
+    json <- tryCatch({
+      LDAvis::createJSON(phi = phi, theta = theta,
+                          vocab = vocab,
+                          doc.length = doc_length,
+                          term.frequency = freq_matrix$Freq,
+                          mds.method = stats::cmdscale)
+    }, error = function(e) {
+      LDAvis::createJSON(phi = phi, theta = theta,
+                          vocab = vocab,
+                          doc.length = doc_length,
+                          term.frequency = freq_matrix$Freq,
+                          mds.method = function(x) { prcomp(x)$x[,1:2] })
+    })
+    
+    return(json)
+  }
 
 
 # ===== Modified LDAvis Output =====
@@ -844,7 +420,7 @@ output$sentiment_plot_removed <- renderHighchart({
     hc_yAxis(title = list(text = "Percentage"), labels = list(format = "{value}%")) %>%
     hc_add_series(name = "Removed Posts", 
                   data = sentiment_data$percentage, 
-                  color = "#AA0114") %>%
+                  color = "#4CAF50") %>%
     hc_tooltip(pointFormat = "<b>{point.category}</b>: {point.y:.1f}%") %>%
     hc_plotOptions(series = list(pointPadding = 0.1, groupPadding = 0.1))
 })
@@ -862,29 +438,10 @@ output$sentiment_plot_remaining <- renderHighchart({
     hc_yAxis(title = list(text = "Percentage"), labels = list(format = "{value}%")) %>%
     hc_add_series(name = "Remaining Posts", 
                   data = sentiment_data$percentage, 
-                  color = "#4472c4") %>%
+                  color = "#2196F3") %>%
     hc_tooltip(pointFormat = "<b>{point.category}</b>: {point.y:.1f}%") %>%
     hc_plotOptions(series = list(pointPadding = 0.1, groupPadding = 0.1))
 })
-
-# # Sentiment comparison table
-# output$dataset_comparison_table <- renderTable({
-#   req(comparison_done(), data1(), data2())
-#   
-#   withProgress(message = 'Comparing datasets...', value = 0, {
-#     incProgress(0.3, detail = "Analyzing Dataset 1")
-#     sent1 <- get_sentiment_distribution(data1()$text)
-#     
-#     incProgress(0.6, detail = "Analyzing Dataset 2")
-#     sent2 <- get_sentiment_distribution(data2()$text)
-#     
-#     data.frame(
-#       Category = c("Negative", "Neutral", "Positive"),
-#       Dataset1 = paste0(round(sent1$percentage, 1), "%"),
-#       Dataset2 = paste0(round(sent2$percentage, 1), "%")
-#     )
-#   })
-# })
 
 # ----- Most Extreme Posts - Dynamic Boxes ----- #
 # Reactive expressions for text
@@ -1222,7 +779,7 @@ return(list(
   comparison_done = comparison_done,
   removed_posts = removed_posts,
   remaining_posts = remaining_posts,
-  data1 = data1,  # Add this line
-  data2 = data2   # Add this line
+  data1 = data1,  
+  data2 = data2   
 ))
 }
