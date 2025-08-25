@@ -1,15 +1,15 @@
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/kunjanshah0811/datcha01)
 
-Datcha Application Documentation
+# Datcha Application Documentation
 Overview
 Datcha is a Shiny-based web application designed to compare two social media datasets collected at different times. It analyzes changes in posts, including deletions, additions, and edits, and provides insights through visualizations and metrics such as word frequency, keyness analysis, topic modeling, and sentiment analysis. The app is built using R and leverages packages like quanteda, sentimentr, topicmodels, diffobj, and highcharter.
 Getting Started
 Prerequisites
-
+------------
 R and Shiny: The app requires R and the Shiny framework.
 Required Packages: Listed in global.R, including shiny, shinyjs, dplyr, tm, topicmodels, sentimentr, wordcloud2, highcharter, tidytext, DT, stringdist, shinyBS, quanteda, KeynessMeasures, SnowballC, textstem, LDAvis, diffobj, htmltools, and bslib.
 Directory Setup: Ensure a www/ directory exists for storing diffobj.css.
-
+------------
 Running the App
 The app is launched via app.R, which sources:
 
@@ -26,12 +26,12 @@ Datcha requires two CSV files, each containing:
 
 A unique ID column (e.g., id, tweet_id, post_id, comment_id, status_id) to identify posts.
 A text column named text containing post content.
-
+---------------
 Users can manually specify ID column names if they differ from the predefined set. The datasets represent social media posts collected at two different times, with the first dataset's collection date earlier than the second.
 User Interface (ui.R)
 Layout
 The app uses a navbarPage with a custom dark blue theme (#1c4474) and includes five tabs:
-
+---------------
 Overview: Introduces the app and allows dataset uploads.
 Data Deletion: Analyzes posts removed between datasets.
 Data Addition: Analyzes posts added in the second dataset.
@@ -52,20 +52,20 @@ The server logic integrates three modules:
 dataDeletionModule: Handles deletion analysis.
 dataAdditionModule: Handles addition analysis.
 dataEditingModule: Handles edit analysis.
-
+-------------
 These modules share data via a shared_data reactive object defined in global.R. The server updates shared_data based on module outputs and triggers UI updates.
 Shared Data
 The shared_data reactive object stores:
-
+-------------
 data1 and data2: The uploaded datasets.
 edit_distances: Levenshtein distances for edited posts.
 comparison_done: Boolean indicating if comparison is complete.
 file1_uploaded and file2_uploaded: Booleans tracking valid uploads.
-
+--------------
 Global Functions (global.R)
 Text Processing
 The text_processor object provides:
-
+--------------
 clean: Converts text to lowercase, removes numbers, punctuation, stopwords, and applies stemming or lemmatization.
 get_freq: Calculates word or bigram frequencies using tm or tidytext.
 
